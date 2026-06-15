@@ -12,15 +12,9 @@ const MODES: { value: Mode; label: string }[] = [
 
 const LENGTHS: Length[] = ["short", "medium", "long"];
 const LENGTH_LABELS: Record<Length, string> = {
-  short: "Kort",
+  short: "Korta",
   medium: "Mellan",
   long: "Lång",
-};
-
-const UNIT_LABEL: Record<Mode, string> = {
-  word: "ord",
-  sentence: "meningar",
-  paragraph: "stycken",
 };
 
 export function LoremGenerator() {
@@ -28,7 +22,6 @@ export function LoremGenerator() {
   const [lengthIdx, setLengthIdx] = useState(1); // medium
   const [count, setCount] = useState(3);
   const [blocks, setBlocks] = useState<string[]>([]);
-  const [copied, setCopied] = useState(false);
 
   const length = LENGTHS[lengthIdx];
 
@@ -43,7 +36,6 @@ export function LoremGenerator() {
           count: opts?.count ?? count,
         })
       );
-      setCopied(false);
     },
     [mode, length, count]
   );
@@ -57,121 +49,91 @@ export function LoremGenerator() {
     setBlocks(generate({ mode, length, count }));
   }, [mode, length, count]);
 
-  const copy = async () => {
-    await navigator.clipboard.writeText(blocks.join("\n\n"));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  };
-
   return (
     <div className="w-full max-w-3xl">
       {/* Controls */}
       <div className="rounded-3xl border border-border bg-fill-raised p-6 shadow-[0_1px_3px_rgb(0_0_0/0.04)] sm:p-8">
-        {/* Step 1 — mode tabs */}
+        {/* Step 1 — mode chips */}
         <Step n={1} label="Vad vill du ha?">
-          <div className="inline-flex w-full rounded-full bg-fill p-1 sm:w-auto">
+          <div className="flex flex-wrap gap-2.5">
             {MODES.map((m) => (
-              <button
-                type="button"
+              <Chip
                 key={m.value}
+                active={mode === m.value}
                 onClick={() => {
                   setMode(m.value);
                   run({ mode: m.value });
                 }}
-                className={cn(
-                  "flex-1 rounded-full px-5 py-2.5 text-sm font-medium transition-colors sm:flex-none",
-                  mode === m.value
-                    ? "bg-accent text-accent-ink"
-                    : "text-ink-dim hover:text-ink"
-                )}
               >
                 {m.label}
-              </button>
+              </Chip>
             ))}
           </div>
         </Step>
 
-        {/* Step 2 — length (irrelevant for word mode) */}
+        {/* Step 2 — length chips (irrelevant for word mode) */}
         <Step
           n={2}
           label="Hur långa?"
           disabled={mode === "word"}
           hint={mode === "word" ? "Gäller bara meningar & stycken" : undefined}
         >
-          <input
-            type="range"
-            min={0}
-            max={2}
-            step={1}
-            value={lengthIdx}
-            disabled={mode === "word"}
-            onChange={(e) => {
-              const idx = Number(e.target.value);
-              setLengthIdx(idx);
-              run({ length: LENGTHS[idx] });
-            }}
-            className="disabled:opacity-40"
-          />
-          <div className="mt-3 flex justify-between text-xs font-medium">
+          <div className="flex flex-wrap gap-2.5">
             {LENGTHS.map((l, i) => (
-              <span
+              <Chip
                 key={l}
-                className={cn(
-                  mode !== "word" && i === lengthIdx
-                    ? "text-ink"
-                    : "text-ink-dim"
-                )}
+                active={mode !== "word" && i === lengthIdx}
+                disabled={mode === "word"}
+                onClick={() => {
+                  setLengthIdx(i);
+                  run({ length: l });
+                }}
               >
                 {LENGTH_LABELS[l]}
-              </span>
+              </Chip>
             ))}
           </div>
         </Step>
 
-        {/* Step 3 — count */}
+        {/* Step 3 — count stepper */}
         <Step n={3} label="Hur många?" last>
-          <input
-            type="range"
-            min={1}
-            max={10}
-            step={1}
-            value={count}
-            onChange={(e) => {
-              const c = Number(e.target.value);
-              setCount(c);
-              run({ count: c });
-            }}
-          />
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-xs font-medium text-ink-dim">1</span>
-            <span className="text-sm font-semibold text-ink">
-              {count} {UNIT_LABEL[mode]}
+          <div className="inline-flex items-center gap-2 rounded-2xl bg-fill p-1.5">
+            <button
+              type="button"
+              aria-label="Färre"
+              disabled={count <= 1}
+              onClick={() => {
+                const c = Math.max(1, count - 1);
+                setCount(c);
+                run({ count: c });
+              }}
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl text-2xl font-medium text-ink transition-colors hover:bg-fill-raised disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              −
+            </button>
+            <span className="min-w-[2.5rem] text-center text-xl font-semibold tabular-nums text-ink">
+              {count}
             </span>
-            <span className="text-xs font-medium text-ink-dim">10</span>
+            <button
+              type="button"
+              aria-label="Fler"
+              disabled={count >= 10}
+              onClick={() => {
+                const c = Math.min(10, count + 1);
+                setCount(c);
+                run({ count: c });
+              }}
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl text-2xl font-medium text-ink transition-colors hover:bg-fill-raised disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              +
+            </button>
           </div>
         </Step>
-
-        <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => run()}
-            className="flex-1 rounded-full bg-ink px-6 py-3.5 text-sm font-semibold text-ink-flip transition-transform hover:scale-[1.01] active:scale-[0.99]"
-          >
-            Brygg ny text 🍺
-          </button>
-          <button
-            type="button"
-            onClick={copy}
-            className="rounded-full border border-border bg-fill-raised px-6 py-3.5 text-sm font-semibold text-ink transition-colors hover:bg-fill"
-          >
-            {copied ? "Kopierat!" : "Kopiera"}
-          </button>
-        </div>
       </div>
 
       {/* Output */}
       <div className="mt-6 rounded-3xl border border-border bg-fill-raised p-6 sm:p-8">
-        <div className="space-y-4 leading-relaxed text-ink">
+        <div className="space-y-4 text-lg leading-relaxed text-ink">
           {blocks.map((block, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: output is fully regenerated each run; blocks may repeat, so index is the stable key
             <p key={i}>{block}</p>
@@ -206,13 +168,42 @@ function Step({
       )}
     >
       <div className="mb-3 flex items-center gap-2.5">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-ink">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-ink-flip">
           {n}
         </span>
-        <span className="text-sm font-semibold text-ink">{label}</span>
+        <span className="text-lg font-semibold text-ink">{label}</span>
         {hint && <span className="text-xs text-ink-dim">· {hint}</span>}
       </div>
       {children}
     </div>
+  );
+}
+
+function Chip({
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  active?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(
+        "cursor-pointer rounded-full border px-5 py-2.5 text-sm font-medium transition-colors",
+        active
+          ? "border-accent bg-accent text-accent-ink-flip"
+          : "border-border bg-fill text-ink-dim hover:text-ink",
+        disabled && "cursor-not-allowed opacity-40 hover:text-ink-dim"
+      )}
+    >
+      {children}
+    </button>
   );
 }

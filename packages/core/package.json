@@ -1,0 +1,12 @@
+{
+  "name": "@kumpsum/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared Swedish-beer lorem ipsum generation engine.",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

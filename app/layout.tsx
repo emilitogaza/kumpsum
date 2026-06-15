@@ -9,8 +9,6 @@ const monaSans = Mona_Sans({
   display: "swap",
 });
 
-// Set NEXT_PUBLIC_SITE_URL in the Coolify environment for correct absolute
-// OG/Twitter URLs in production; falls back to localhost during development.
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 const SITE_NAME = "Kumpsum";
@@ -50,7 +48,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="sv" className={`${monaSans.variable} h-full antialiased`}>
+    <html
+      lang="sv"
+      className={`${monaSans.variable} h-full antialiased selection:text-ink selection:bg-brand`}
+    >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

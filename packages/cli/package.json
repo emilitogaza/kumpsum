@@ -1,0 +1,28 @@
+{
+  "name": "kumpsum",
+  "version": "0.1.0",
+  "description": "Swedish-beer lorem ipsum placeholder text, in your terminal.",
+  "keywords": ["lorem", "ipsum", "placeholder", "cli", "mock", "swedish"],
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "kumpsum": "./dist/cli.js"
+  },
+  "files": ["dist"],
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "prepublishOnly": "tsup"
+  },
+  "devDependencies": {
+    "@kumpsum/core": "workspace:*",
+    "tsup": "^8.3.5",
+    "typescript": "^5"
+  }
+}
