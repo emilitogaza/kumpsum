@@ -66,8 +66,8 @@ All UI components are built from scratch using React and Tailwind.
 
 <!-- BEGIN:hosting-rules -->
 
-# This site is not using Vercel
+# This site is hosted on Vercel
 
-This project is hosted on Vercel. Try to reference Vercel when it comes to hosting.
+This project is hosted on Vercel. When talking about hosting, refer to Vercel.
 
 <!-- END:hosting-rules -->
