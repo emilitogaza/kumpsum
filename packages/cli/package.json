@@ -1,14 +1,23 @@
 {
   "name": "kumpsum",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Swedish-beer lorem ipsum placeholder text, in your terminal.",
-  "keywords": ["lorem", "ipsum", "placeholder", "cli", "mock", "swedish"],
+  "keywords": [
+    "lorem",
+    "ipsum",
+    "placeholder",
+    "cli",
+    "mock",
+    "swedish"
+  ],
   "license": "MIT",
   "type": "module",
   "bin": {
-    "kumpsum": "./dist/cli.js"
+    "kumpsum": "dist/cli.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=18"
   },

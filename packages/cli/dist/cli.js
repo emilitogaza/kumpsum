@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// src/cli.ts
+import { spawnSync } from "child_process";
+
 // ../core/src/index.ts
 var OL_WORDS = [
   "\xF6l",
@@ -154,8 +157,10 @@ var EASTER_EGGS = [
   "sk\xE5l och commit",
   "ship it"
 ];
-var PUNCTUATION = ["", "", "", "", "", ",", ",", ";"];
 var EASTER_EGG_CHANCE = 0.015;
+var PUNCT_CHANCE = 0.14;
+var SEMICOLON_RATIO = 0.18;
+var MIN_GAP = 2;
 var SENTENCE_WORDS = {
   short: [3, 6],
   medium: [7, 13],
@@ -186,9 +191,17 @@ function buildSentence(length) {
   const [min, max] = SENTENCE_WORDS[length];
   const count = randInt(min, max);
   let sentence = "";
+  let sinceBreak = 0;
   for (let i = 0; i < count; i++) {
     const word = Math.random() < EASTER_EGG_CHANCE ? pick(EASTER_EGGS) : randomWord();
-    const punct = i < count - 1 ? pick(PUNCTUATION) : "";
+    const canBreak = i > 0 && i < count - 1 && sinceBreak >= MIN_GAP;
+    let punct = "";
+    if (canBreak && Math.random() < PUNCT_CHANCE) {
+      punct = Math.random() < SEMICOLON_RATIO ? ";" : ",";
+      sinceBreak = 0;
+    } else {
+      sinceBreak++;
+    }
     sentence += `${i === 0 ? capitalize(word) : word}${punct} `;
   }
   return `${sentence.trim()}.`;
@@ -215,6 +228,18 @@ function generate({ mode, length, count }) {
 
 // src/cli.ts
 var VERSION = "0.1.0";
+var CLIPBOARD_COMMANDS = process.platform === "darwin" ? [["pbcopy", []]] : process.platform === "win32" ? [["clip", []]] : [
+  ["wl-copy", []],
+  ["xclip", ["-selection", "clipboard"]],
+  ["xsel", ["--clipboard", "--input"]]
+];
+function copyToClipboard(text) {
+  for (const [cmd, args] of CLIPBOARD_COMMANDS) {
+    const result = spawnSync(cmd, args, { input: text });
+    if (!result.error && result.status === 0) return true;
+  }
+  return false;
+}
 var MODE_ALIASES = {
   p: "paragraph",
   para: "paragraph",
@@ -235,6 +260,7 @@ COUNT     how many to generate                               default: 3
 
 OPTIONS
   -l, --length  short | medium | long    block size          default: medium
+  -c, --copy    also copy the output to your clipboard
   -j, --json    output as a JSON array of blocks
   -h, --help    show this help
   -v, --version show version
@@ -244,7 +270,7 @@ EXAMPLES
   kumpsum p 8             eight paragraphs
   kumpsum word 50         fifty words
   kumpsum s 3 -l long     three long sentences
-  kumpsum p 8 | pbcopy    pipe straight to the clipboard
+  kumpsum p 8 -c          eight paragraphs, copied to the clipboard
 `;
 function fail(message) {
   process.stderr.write(`kumpsum: ${message}
@@ -258,6 +284,7 @@ function parse(argv) {
   let count = 3;
   let length = "medium";
   let json = false;
+  let copy = false;
   let modeSet = false;
   let countSet = false;
   for (let i = 0; i < argv.length; i++) {
@@ -273,6 +300,10 @@ function parse(argv) {
     }
     if (arg === "-j" || arg === "--json") {
       json = true;
+      continue;
+    }
+    if (arg === "-c" || arg === "--copy") {
+      copy = true;
       continue;
     }
     if (arg === "-l" || arg === "--length") {
@@ -300,17 +331,22 @@ function parse(argv) {
   if (count < 1) fail("count must be a positive number");
   void modeSet;
   void countSet;
-  return { mode, count, length, json };
+  return { mode, count, length, json, copy };
 }
 function main() {
-  const { mode, count, length, json } = parse(process.argv.slice(2));
+  const { mode, count, length, json, copy } = parse(process.argv.slice(2));
   const blocks = generate({ mode, length, count });
-  if (json) {
-    process.stdout.write(`${JSON.stringify(blocks, null, 2)}
+  const output = json ? JSON.stringify(blocks, null, 2) : (
+    // Blank line between blocks reads well for paragraphs, harmless otherwise.
+    blocks.join("\n\n")
+  );
+  process.stdout.write(`${output}
 `);
-    return;
+  if (copy) {
+    const ok = copyToClipboard(output);
+    process.stderr.write(
+      ok ? "\u{1F4CB} copied to clipboard\n" : "kumpsum: couldn't reach a clipboard tool (sk\xE5l anyway)\n"
+    );
   }
-  process.stdout.write(`${blocks.join("\n\n")}
-`);
 }
 main();

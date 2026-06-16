@@ -34,10 +34,10 @@ export function LoremGenerator() {
           mode: opts?.mode ?? mode,
           length: opts?.length ?? length,
           count: opts?.count ?? count,
-        })
+        }),
       );
     },
-    [mode, length, count]
+    [mode, length, count],
   );
 
   // Seed the first paint on the client. Randomised text can't run during SSR
@@ -52,9 +52,9 @@ export function LoremGenerator() {
   return (
     <div className="w-full max-w-3xl">
       {/* Controls */}
-      <div className="rounded-3xl border border-border bg-fill-raised p-6 shadow-[0_1px_3px_rgb(0_0_0/0.04)] sm:p-8">
+      <div className="">
         {/* Step 1 — mode chips */}
-        <Step n={1} label="Vad vill du ha?">
+        <Step n={1} label="Vad önskas?">
           <div className="flex flex-wrap gap-2.5">
             {MODES.map((m) => (
               <Chip
@@ -74,7 +74,7 @@ export function LoremGenerator() {
         {/* Step 2 — length chips (irrelevant for word mode) */}
         <Step
           n={2}
-          label="Hur långa?"
+          label="Hur långt?"
           disabled={mode === "word"}
           hint={mode === "word" ? "Gäller bara meningar & stycken" : undefined}
         >
@@ -97,7 +97,7 @@ export function LoremGenerator() {
 
         {/* Step 3 — count stepper */}
         <Step n={3} label="Hur många?" last>
-          <div className="inline-flex items-center gap-2 rounded-2xl bg-fill p-1.5">
+          <div className="inline-flex items-center gap-2 rounded-4 bg-fill-raised p-1">
             <button
               type="button"
               aria-label="Färre"
@@ -107,11 +107,11 @@ export function LoremGenerator() {
                 setCount(c);
                 run({ count: c });
               }}
-              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl text-2xl font-medium text-ink transition-colors hover:bg-fill-raised disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex size-15 cursor-pointer items-center justify-center rounded-3 text-2xl font-medium text-ink transition-colors duration-200 ease-out hover:bg-brand hover:text-ink-flip disabled:cursor-not-allowed disabled:opacity-30"
             >
               −
             </button>
-            <span className="min-w-[2.5rem] text-center text-xl font-semibold tabular-nums text-ink">
+            <span className="min-w-12 text-center text-xl font-semibold tabular-nums text-ink">
               {count}
             </span>
             <button
@@ -123,7 +123,7 @@ export function LoremGenerator() {
                 setCount(c);
                 run({ count: c });
               }}
-              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-xl text-2xl font-medium text-ink transition-colors hover:bg-fill-raised disabled:cursor-not-allowed disabled:opacity-30"
+              className="flex size-15 cursor-pointer items-center justify-center rounded-3 text-2xl font-medium text-ink transition-colors duration-200 ease-out hover:bg-brand hover:text-ink-flip disabled:cursor-not-allowed disabled:opacity-30"
             >
               +
             </button>
@@ -132,8 +132,8 @@ export function LoremGenerator() {
       </div>
 
       {/* Output */}
-      <div className="mt-6 rounded-3xl border border-border bg-fill-raised p-6 sm:p-8">
-        <div className="space-y-4 text-lg leading-relaxed text-ink">
+      <div className="mt-6 ">
+        <div className="space-y-4 text-lg md:text-xl leading-relaxed text-ink">
           {blocks.map((block, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: output is fully regenerated each run; blocks may repeat, so index is the stable key
             <p key={i}>{block}</p>
@@ -160,19 +160,13 @@ function Step({
   last?: boolean;
 }) {
   return (
-    <div
-      className={cn(
-        "py-5",
-        !last && "border-b border-border",
-        disabled && "opacity-60"
-      )}
-    >
+    <div className={cn("pb-8", !last && "pb-12", disabled && "opacity-60")}>
       <div className="mb-3 flex items-center gap-2.5">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-ink-flip">
+        <span className="flex size-12 items-center justify-center rounded-3 bg-brand/15 text-2xl font-semibold text-brand-ink">
           {n}
         </span>
-        <span className="text-lg font-semibold text-ink">{label}</span>
-        {hint && <span className="text-xs text-ink-dim">· {hint}</span>}
+        <span className="text-2xl font-semibold text-ink">{label}</span>
+        {hint && <span className="text-ink-dim">· {hint}</span>}
       </div>
       {children}
     </div>
@@ -196,11 +190,11 @@ function Chip({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "cursor-pointer rounded-full border px-5 py-2.5 text-sm font-medium transition-colors",
+        "rounded-3 outline-2 px-6 py-3 text-xl font-semibold  transition-all",
         active
-          ? "border-accent bg-accent text-accent-ink-flip"
-          : "border-border bg-fill text-ink-dim hover:text-ink",
-        disabled && "cursor-not-allowed opacity-40 hover:text-ink-dim"
+          ? " bg-brand text-brand-ink-flip outline-brand"
+          : " bg-fill text-ink-dim hover:text-ink hover:bg-brand/10 hover:outline-4 outline-brand/20 cursor-pointer hover:outline-brand",
+        disabled && "cursor-not-allowed opacity-40 hover:text-ink-dim",
       )}
     >
       {children}

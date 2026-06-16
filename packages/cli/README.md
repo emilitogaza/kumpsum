@@ -13,7 +13,7 @@ kumpsum                 # 🍺 three medium paragraphs (the house special)
 kumpsum p 8             # eight paragraphs
 kumpsum word 50         # fifty words
 kumpsum s 3 -l long     # three long sentences
-kumpsum p 8 | pbcopy    # straight to the clipboard, skål
+kumpsum p 8 -c          # ...and copy it to the clipboard, skål
 ```
 
 ## On tap
@@ -23,6 +23,7 @@ kumpsum p 8 | pbcopy    # straight to the clipboard, skål
 | `mode`            | `paragraph` · `sentence` · `word` (or `p` · `s` · `w`) | `paragraph`  |
 | `count`           | however many you can handle           | `3`          |
 | `-l, --length`    | `short` · `medium` · `long`           | `medium`     |
+| `-c, --copy`      | also slide it onto your clipboard     | off          |
 | `-j, --json`      | a tidy JSON array, for the robots     | off          |
 | `-h, --help`      | the full menu                         | —            |
 

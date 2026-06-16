@@ -166,9 +166,13 @@ const EASTER_EGGS = [
   "ship it",
 ];
 
-const PUNCTUATION = ["", "", "", "", "", ",", ",", ";"];
-
 const EASTER_EGG_CHANCE = 0.015; // ~1.5% of words become an easter-egg phrase
+
+// Punctuation tuning — kept sparse so sentences read in longer breaths rather
+// than choppy "word, word, word" runs.
+const PUNCT_CHANCE = 0.14; // chance an eligible word gets a comma/semicolon
+const SEMICOLON_RATIO = 0.18; // of those breaks, how many are semicolons (rare)
+const MIN_GAP = 2; // words that must follow a break before the next one
 
 export type Mode = "word" | "sentence" | "paragraph";
 export type Length = "short" | "medium" | "long";
@@ -213,13 +217,24 @@ function buildSentence(length: Length): string {
   const [min, max] = SENTENCE_WORDS[length];
   const count = randInt(min, max);
   let sentence = "";
+  let sinceBreak = 0; // words since the last comma/semicolon
 
   for (let i = 0; i < count; i++) {
     // Once in a blue moon, drop in a whole easter-egg phrase instead of a word.
     const word =
       Math.random() < EASTER_EGG_CHANCE ? pick(EASTER_EGGS) : randomWord();
-    // No trailing punctuation on the final word — that gets the period.
-    const punct = i < count - 1 ? pick(PUNCTUATION) : "";
+
+    // A break is only eligible mid-sentence, never on the final word (it gets
+    // the period) nor right after another break — that keeps clauses breathing.
+    const canBreak = i > 0 && i < count - 1 && sinceBreak >= MIN_GAP;
+    let punct = "";
+    if (canBreak && Math.random() < PUNCT_CHANCE) {
+      punct = Math.random() < SEMICOLON_RATIO ? ";" : ",";
+      sinceBreak = 0;
+    } else {
+      sinceBreak++;
+    }
+
     sentence += `${i === 0 ? capitalize(word) : word}${punct} `;
   }
 

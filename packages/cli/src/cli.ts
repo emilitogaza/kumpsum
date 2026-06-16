@@ -1,7 +1,32 @@
 #!/usr/bin/env node
+import { spawnSync } from "node:child_process";
 import { generate, type Length, type Mode } from "@kumpsum/core";
 
-const VERSION = "0.1.0";
+// Injected from package.json at build time (see tsup.config.ts) so the version
+// never has to be edited here — `npm version` is the only place it changes.
+declare const __VERSION__: string;
+const VERSION = __VERSION__;
+
+// Native clipboard tools per platform — no dependency, just pipe text into the
+// OS utility. Linux tries a few since installs vary (Wayland vs X11).
+const CLIPBOARD_COMMANDS: Array<[string, string[]]> =
+  process.platform === "darwin"
+    ? [["pbcopy", []]]
+    : process.platform === "win32"
+      ? [["clip", []]]
+      : [
+          ["wl-copy", []],
+          ["xclip", ["-selection", "clipboard"]],
+          ["xsel", ["--clipboard", "--input"]],
+        ];
+
+function copyToClipboard(text: string): boolean {
+  for (const [cmd, args] of CLIPBOARD_COMMANDS) {
+    const result = spawnSync(cmd, args, { input: text });
+    if (!result.error && result.status === 0) return true;
+  }
+  return false;
+}
 
 // Mode aliases so `kumpsum p 8`, `kumpsum paragraph 8` and `kumpsum -p 8` all work.
 const MODE_ALIASES: Record<string, Mode> = {
@@ -26,6 +51,7 @@ COUNT     how many to generate                               default: 3
 
 OPTIONS
   -l, --length  short | medium | long    block size          default: medium
+  -c, --copy    also copy the output to your clipboard
   -j, --json    output as a JSON array of blocks
   -h, --help    show this help
   -v, --version show version
@@ -35,7 +61,7 @@ EXAMPLES
   kumpsum p 8             eight paragraphs
   kumpsum word 50         fifty words
   kumpsum s 3 -l long     three long sentences
-  kumpsum p 8 | pbcopy    pipe straight to the clipboard
+  kumpsum p 8 -c          eight paragraphs, copied to the clipboard
 `;
 
 interface ParsedArgs {
@@ -43,6 +69,7 @@ interface ParsedArgs {
   count: number;
   length: Length;
   json: boolean;
+  copy: boolean;
 }
 
 function fail(message: string): never {
@@ -55,6 +82,7 @@ function parse(argv: string[]): ParsedArgs {
   let count = 3;
   let length: Length = "medium";
   let json = false;
+  let copy = false;
   let modeSet = false;
   let countSet = false;
 
@@ -72,6 +100,10 @@ function parse(argv: string[]): ParsedArgs {
     }
     if (arg === "-j" || arg === "--json") {
       json = true;
+      continue;
+    }
+    if (arg === "-c" || arg === "--copy") {
+      copy = true;
       continue;
     }
     if (arg === "-l" || arg === "--length") {
@@ -107,20 +139,29 @@ function parse(argv: string[]): ParsedArgs {
   void modeSet;
   void countSet;
 
-  return { mode, count, length, json };
+  return { mode, count, length, json, copy };
 }
 
 function main() {
-  const { mode, count, length, json } = parse(process.argv.slice(2));
+  const { mode, count, length, json, copy } = parse(process.argv.slice(2));
   const blocks = generate({ mode, length, count });
 
-  if (json) {
-    process.stdout.write(`${JSON.stringify(blocks, null, 2)}\n`);
-    return;
-  }
+  const output = json
+    ? JSON.stringify(blocks, null, 2)
+    : // Blank line between blocks reads well for paragraphs, harmless otherwise.
+      blocks.join("\n\n");
 
-  // Blank line between blocks reads well for paragraphs and is harmless otherwise.
-  process.stdout.write(`${blocks.join("\n\n")}\n`);
+  process.stdout.write(`${output}\n`);
+
+  if (copy) {
+    // Confirmation goes to stderr so it never pollutes piped/redirected stdout.
+    const ok = copyToClipboard(output);
+    process.stderr.write(
+      ok
+        ? "📋 copied to clipboard\n"
+        : "kumpsum: couldn't reach a clipboard tool (skål anyway)\n",
+    );
+  }
 }
 
 main();
