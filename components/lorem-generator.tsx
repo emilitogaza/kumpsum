@@ -13,9 +13,9 @@ const MODES: { value: Mode; label: string }[] = [
 
 const LENGTHS: Length[] = ["short", "medium", "long"];
 const LENGTH_LABELS: Record<Length, string> = {
-  short: "Korta",
-  medium: "Mellan",
-  long: "Lång",
+  short: "Kort",
+  medium: "Lagom",
+  long: "Långt",
 };
 
 export function LoremGenerator() {
