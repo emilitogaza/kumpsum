@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Mona_Sans } from "next/font/google";
+import { MotionProvider } from "@/components/motion-provider";
 import "./globals.css";
 
 const monaSans = Mona_Sans({
@@ -52,7 +53,9 @@ export default function RootLayout({
       lang="sv"
       className={`${monaSans.variable} h-full antialiased selection:text-ink selection:bg-brand`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   );
 }

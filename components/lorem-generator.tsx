@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, m } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { generate, type Length, type Mode } from "@/lib/lorem";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,9 @@ export function LoremGenerator() {
   const [lengthIdx, setLengthIdx] = useState(1); // medium
   const [count, setCount] = useState(3);
   const [blocks, setBlocks] = useState<string[]>([]);
+  // Bumped on every generation so AnimatePresence treats each result as a new
+  // node — that's what drives the exit-then-enter word animation.
+  const [genId, setGenId] = useState(0);
 
   const length = LENGTHS[lengthIdx];
 
@@ -36,6 +40,7 @@ export function LoremGenerator() {
           count: opts?.count ?? count,
         }),
       );
+      setGenId((n) => n + 1);
     },
     [mode, length, count],
   );
@@ -47,6 +52,7 @@ export function LoremGenerator() {
     if (mounted.current) return;
     mounted.current = true;
     setBlocks(generate({ mode, length, count }));
+    setGenId((n) => n + 1);
   }, [mode, length, count]);
 
   return (
@@ -132,13 +138,50 @@ export function LoremGenerator() {
       </div>
 
       {/* Output */}
-      <div className="mt-6 ">
-        <div className="space-y-4 text-lg md:text-xl leading-relaxed text-ink">
-          {blocks.map((block, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: output is fully regenerated each run; blocks may repeat, so index is the stable key
-            <p key={i}>{block}</p>
-          ))}
-        </div>
+      <div className="mt-6">
+        <AnimatePresence mode="wait">
+          <m.div
+            key={genId}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18, ease: "easeIn" }}
+            className="space-y-4 text-lg leading-relaxed text-ink md:text-xl"
+          >
+            {(() => {
+              // Stagger every word across the whole output with a global index.
+              // The per-word delay scales to the total word count so the cascade
+              // spreads evenly across MAX_STAGGER no matter how long the result
+              // is — short results animate quickly, long ones don't drag.
+              const MAX_STAGGER = 0.7;
+              const total = blocks.reduce(
+                (sum, b) => sum + b.split(" ").length,
+                0,
+              );
+              const step = MAX_STAGGER / Math.max(total - 1, 1);
+              let w = 0;
+              return blocks.map((block, bi) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: output is fully regenerated each run; blocks may repeat, so index is the stable key
+                <p key={bi}>
+                  {block.split(" ").map((word, wi) => (
+                    <m.span
+                      // biome-ignore lint/suspicious/noArrayIndexKey: words regenerate as a set; index is the stable key within a block
+                      key={wi}
+                      className="inline-block"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.35,
+                        ease: [0.22, 1, 0.36, 1],
+                        delay: w++ * step,
+                      }}
+                    >
+                      {word}&nbsp;
+                    </m.span>
+                  ))}
+                </p>
+              ));
+            })()}
+          </m.div>
+        </AnimatePresence>
       </div>
     </div>
   );

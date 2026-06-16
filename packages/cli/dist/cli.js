@@ -227,7 +227,7 @@ function generate({ mode, length, count }) {
 }
 
 // src/cli.ts
-var VERSION = "0.1.0";
+var VERSION = "0.2.0";
 var CLIPBOARD_COMMANDS = process.platform === "darwin" ? [["pbcopy", []]] : process.platform === "win32" ? [["clip", []]] : [
   ["wl-copy", []],
   ["xclip", ["-selection", "clipboard"]],
