@@ -85,7 +85,7 @@ After building, run your local CLI with `node packages/cli/dist/cli.js …`.
 
 ## Hosting
 
-The site deploys on **Coolify**. The CLI lives on **npm**.
+The CLI lives on **npm**.
 
 ---
 
