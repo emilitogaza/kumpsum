@@ -68,6 +68,6 @@ All UI components are built from scratch using React and Tailwind.
 
 # This site is not using Vercel
 
-When talking about hosting, we use Coolify for this project, not Vercel. Try to not reference Vercel when it comes to hosting.
+This project is hosted on Vercel. Try to reference Vercel when it comes to hosting.
 
 <!-- END:hosting-rules -->
